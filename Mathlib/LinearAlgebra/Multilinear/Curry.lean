@@ -353,13 +353,23 @@ def curryFinFinset {k l n : ℕ} {s : Finset (Fin n)} (hk : #s = k) (hl : #sᶜ 
   (domDomCongrLinearEquiv R R M' M₂ (finSumEquivOfFinset hk hl).symm).trans
     currySumEquiv
 
+def curryFinFinset' {k n : ℕ} {s : Finset (Fin n)} (hk : #s = k) :
+    MultilinearMap R (fun _ : Fin n ↦ M') M₂ ≃ₗ[R]
+      MultilinearMap R (fun _ : Fin (n-k) ↦ M') (MultilinearMap R (fun _ : Fin k ↦ M') M₂) :=
+  (domDomCongrLinearEquiv R R M' M₂
+    (finSumEquivOfFinset ((by simp [hk, card_compl]) : #sᶜ=n-k) (by simp [hk])).symm).trans
+    currySumEquiv
+
 variable {R M₂ M'}
 
+-- TBD: The rhs, with the long Equiv, is not very nice to expose.
 @[simp]
-theorem curryFinFinset_apply {k l n : ℕ} {s : Finset (Fin n)} (hk : #s = k) (hl : #sᶜ = l)
-    (f : MultilinearMap R (fun _ : Fin n => M') M₂) (mk : Fin k → M') (ml : Fin l → M') :
-    curryFinFinset R M₂ M' hk hl f mk ml =
-      f fun i => Sum.elim mk ml ((finSumEquivOfFinset hk hl).symm i) :=
+theorem curryFinFinset_apply {k n : ℕ} {s : Finset (Fin n)} (hk : #s = k)
+    (f : MultilinearMap R (fun _ : Fin n => M') M₂) (ml : Fin (n-k) → M') (mk : Fin k → M') :
+    curryFinFinset' R M₂ M' hk f ml mk =
+      f fun i => Sum.elim ml mk (
+        (finSumEquivOfFinset ((by simp [hk, card_compl]) : #sᶜ=n-k) (by simp [hk])).symm i
+        ) :=
   rfl
 
 @[simp]
