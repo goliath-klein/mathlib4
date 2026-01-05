@@ -7,11 +7,6 @@ module
 
 public import Mathlib.Analysis.Normed.Module.Multilinear.Basic
 public import Mathlib.LinearAlgebra.PiTensorProduct
-public import Mathlib.RingTheory.PiTensorProduct
-public import Mathlib.Analysis.RCLike.Basic
-
-import Mathlib.Analysis.Normed.Module.HahnBanach
-import Mathlib.LinearAlgebra.PiTensorProduct.Dual
 
 /-!
 # Projective seminorm on the tensor of a finite family of normed spaces.
@@ -54,12 +49,8 @@ for every `m` in `Π i, Eᵢ` is bounded above by the projective seminorm.
 
 ## TODO
 
-* The projective seminorm is multiplicative if the evaluation map embedding `Eᵢ`
-  into its bidual is an isometry for every `i`. Under the slightly stronger
-  assumption that every `mᵢ` attains its norm over the closed unit ball of the
-  continuous dual, this is proved by `projectiveSeminorm_tprod_of_dual_vectors`.
-  (By Hahn-Banach, this always happens over `ℝ` or `ℂ`). TBD: Treat the more
-  general case where the supremum may not be attained.
+* If the base field is `ℝ` or `ℂ` (or more generally if the injection of `Eᵢ` into its bidual is
+  an isometry for every `i`), then we have `projectiveSeminorm ⨂ₜ[𝕜] i, mᵢ = Π i, ‖mᵢ‖`.
 * If all `Eᵢ` are separated and satisfy `SeparatingDual`, then the seminorm on
   `⨂[𝕜] i, Eᵢ` is a norm. This uses the construction of a basis of the `PiTensorProduct`, hence
   depends on PR https://github.com/leanprover-community/mathlib4/pull/11156.
@@ -168,56 +159,6 @@ section NontriviallyNormedField
 
 variable [NontriviallyNormedField 𝕜]
 variable [∀ i, NormedSpace 𝕜 (E i)]
-
-/- The projective seminorm is multiplicative, `projectiveSeminorm ⨂ₜ[𝕜] i, mᵢ = Π i, ‖mᵢ‖`, if for
-every `mᵢ`, there exists a dual vector `gᵢ` of norm at most one, such that `‖gᵢ mᵢ‖ = ‖mᵢ‖`. -/
-theorem projectiveSeminorm_tprod_of_dual_vectors {g : Π i, StrongDual 𝕜 (E i)}
-    (m : Π i, E i) (hg₁ : ∀ i, ‖g i‖ ≤ 1) (hg₂ : ∀ i, ‖g i (m i)‖ = ‖m i‖) :
-    projectiveSeminorm (⨂ₜ[𝕜] i, m i) = ∏ i, ‖m i‖ := by
-  apply eq_of_le_of_ge (projectiveSeminorm_tprod_le m)
-  have := nonempty_subtype.mpr (nonempty_lifts (⨂ₜ[𝕜] i, m i))
-  apply le_ciInf (fun x ↦ ?_)
-  have hx := congr_arg (norm ∘ dualDistrib (⨂ₜ[𝕜] i, g i)) ((mem_lifts_iff _ _).mp x.prop)
-  simp only [Function.comp_apply, dualDistrib_apply, ContinuousLinearMap.coe_coe, hg₂, norm_prod,
-     map_list_sum, List.map_map] at hx
-  grw [← hx, List.le_sum_of_subadditive norm norm_zero.le norm_add_le, List.map_map]
-  apply List.sum_le_sum (fun _ _ ↦ ?_)
-  simp only [Function.comp_apply, map_smul, dualDistrib_apply, ContinuousLinearMap.coe_coe,
-    smul_eq_mul, norm_mul, norm_prod]
-  gcongr
-  grw [ContinuousLinearMap.le_opNorm, hg₁, one_mul]
-
--- TBD: Does something like this already exist? --
-section DoesThisExist?
-
-open ContinuousLinearMap
-
-def mulL : 𝕜 → StrongDual 𝕜 𝕜 := fun a ↦ LinearMap.mkContinuous (LinearMap.mul 𝕜 𝕜 a) ‖a‖ (by simp)
-
-theorem mulL_apply {a b : 𝕜} : (mulL a) b = a * b := by rfl
-
-theorem opNorm_mulL_eq {a : 𝕜} : ‖mulL a‖ = ‖a‖ := by
-  apply le_antisymm (opNorm_le_bound _ (norm_nonneg a) (by simp [mulL_apply]))
-  simpa [mulL_apply] using (mulL a).ratio_le_opNorm 1
-
-end DoesThisExist?
-
-theorem projectiveSeminorm_tprod_field (m : (i : ι) → 𝕜) :
-    projectiveSeminorm (⨂ₜ[𝕜] i, m i) = ∏ i, ‖m i‖ :=
-  projectiveSeminorm_tprod_of_dual_vectors m (g:=fun _ ↦ mulL 1)
-    (by simp [opNorm_mulL_eq]) (by simp [mulL_apply])
-
-section HahnBanach
-
-variable {𝕜 : Type u𝕜} [RCLike 𝕜]
-variable {E : ι → Type uE} [∀ i, NormedAddCommGroup (E i)] [∀ i, NormedSpace 𝕜 (E i)]
-
-theorem projectiveSeminorm_tprod (m : Π i, E i)
-    : projectiveSeminorm (⨂ₜ[𝕜] i, m i) = ∏ i, ‖m i‖ := by
-  choose g hg₁ hg₂ using fun i ↦ exists_dual_vector'' 𝕜 (m i)
-  exact projectiveSeminorm_tprod_of_dual_vectors m hg₁ (by simp [hg₂])
-
-end HahnBanach
 
 theorem norm_eval_le_projectiveSeminorm {G : Type*} [SeminormedAddCommGroup G]
     [NormedSpace 𝕜 G] (f : ContinuousMultilinearMap 𝕜 E G)
