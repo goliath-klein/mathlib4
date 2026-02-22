@@ -10,23 +10,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-
-def get_unique_measurements_path():
-    try:
-        sha = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
-    except subprocess.CalledProcessError:
-        sha = "nosha" # Fallback if not in a git repo
-
-    n = 1
-    while True:
-        candidate = Path() / f"measurements-{sha}-{n}.jsonl"
-        if not candidate.exists():
-            return candidate
-        n += 1
-
-OUTFILE = get_unique_measurements_path()
-
-print(f"Saving to: {OUTFILE}")
+OUTFILE = Path() / "measurements.jsonl"
 
 @dataclass
 class PerfMetric:

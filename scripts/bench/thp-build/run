@@ -17,14 +17,20 @@ else
   echo "Skipping 'lake clean' (CLEAN=$CLEAN)"
 fi
 
+if [[ -f "measurements.jsonl" ]]; then
+    mv "measurements.jsonl" "measurement.jsonl~"
+fi
+
 LEAN_PATH=$(lean --print-libdir) lake build proofwidgets
 rm -f .lake/packages/batteries/.lake/build/bin/runLinter
 
 # Run build
-LAKE_OVERRIDE_LEAN=true LEAN=$(realpath "$BENCH/build/fake-root/bin/lean") \
+LAKE_OVERRIDE_LEAN=true LEAN=$(realpath "$BENCH/thp-build/fake-root/bin/lean") \
   "$BENCH/thp-build/measure-thp.py" -t build \
   -m instructions -m maxrss -m task-clock -m wall-clock -- \
   lakeprof record lake build --no-cache
+
+python3 "$BENCH/thp-build/rename-json.py"
 
 ## Analyze lakeprof data
 #lakeprof report -pj | jq -c '{metric: "build/lakeprof/longest build path//wall-clock", value: .[-1][2], unit: "s"}' >> measurements.jsonl

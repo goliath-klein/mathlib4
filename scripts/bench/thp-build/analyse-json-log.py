@@ -64,14 +64,13 @@ def compare_logs(file1, file2):
   print("-" * 40)
   print(f"File 1 ({file1}): {len(base_metrics)} modules")
   print(f"File 2 ({file2}): {len(new_metrics)} modules")
-  print(f"Total Instruction Change: {total_change/1e9:+.2f}G")
-  #print(f"Total Instruction Change: {total_change:+,g}")
+  print(f"Total change [among modules in both runs]: {total_change/1e9:+.2f}G")
   print(f"Top {len(top_n_diffs)} Net Change: {subset_change/1e9:+.2f}G")
   print("-" * 40)
 
   for name, diff in top_n_diffs:
     if diff != 0:
-      print(f"('{name}', {diff/1e9:+.2f}G")
+      print(f"'{name}', {diff/1e9:+.2f}G")
 
 if __name__ == "__main__":
   if len(sys.argv) != 3:

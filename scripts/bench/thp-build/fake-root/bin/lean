@@ -9,7 +9,7 @@ from pathlib import Path
 
 NAME = "build"
 REPO = Path()
-BENCH = REPO / "scripts" / "bench"
+BENCH = REPO / "scripts" / "bench" / "thp-build"
 OUTFILE = REPO / "measurements.jsonl"
 
 
@@ -49,7 +49,7 @@ def count_lines(module: str, path: Path) -> None:
 
 def run_lean(module: str) -> None:
     stderr = run_stderr(
-        f"{BENCH}/measure.py",
+        f"{BENCH}/measure-thp.py",
         *("-t", f"{NAME}/module/{module}"),
         *("-m", "instructions"),
         "--",
