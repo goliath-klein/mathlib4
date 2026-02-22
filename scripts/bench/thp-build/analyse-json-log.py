@@ -71,7 +71,7 @@ def compare_logs(file1, file2):
 
   for name, diff in top_n_diffs:
     if diff != 0:
-      print(f"('{name}', {diff/1e9:+.2f})G")
+      print(f"('{name}', {diff/1e9:+.2f}G")
 
 if __name__ == "__main__":
   if len(sys.argv) != 3:
