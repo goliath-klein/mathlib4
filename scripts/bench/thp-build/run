@@ -9,8 +9,10 @@ CLEAN=${CLEAN:-true}
 # Prepare build
 # Use build cache for proofwidgets, but not for anything else.
 if [ "$CLEAN" = "true" ]; then
-  echo "Running 'lake clean'..."
   lake clean
+  # We sometimes see lingering locks. Maybe an NFS issue?
+  rm -rf delme
+  mv .lake delme
 else
   echo "Skipping 'lake clean' (CLEAN=$CLEAN)"
 fi
@@ -20,7 +22,7 @@ rm -f .lake/packages/batteries/.lake/build/bin/runLinter
 
 # Run build
 LAKE_OVERRIDE_LEAN=true LEAN=$(realpath "$BENCH/build/fake-root/bin/lean") \
-  "$BENCH/measure.py" -t build \
+  "$BENCH/thp-build/measure-thp.py" -t build \
   -m instructions -m maxrss -m task-clock -m wall-clock -- \
   lakeprof record lake build --no-cache
 

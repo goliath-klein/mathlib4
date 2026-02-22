@@ -10,8 +10,23 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-OUTFILE = Path() / "measurements.jsonl"
 
+def get_unique_measurements_path():
+    try:
+        sha = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode('ascii').strip()
+    except subprocess.CalledProcessError:
+        sha = "nosha" # Fallback if not in a git repo
+
+    n = 1
+    while True:
+        candidate = Path() / f"measurements-{sha}-{n}.jsonl"
+        if not candidate.exists():
+            return candidate
+        n += 1
+
+OUTFILE = get_unique_measurements_path()
+
+print(f"Saving to: {OUTFILE}")
 
 @dataclass
 class PerfMetric:
@@ -26,7 +41,7 @@ class RusageMetric:
     factor: float = 1
     unit: str | None = None
 
-# Modified for `l17` specifically. Beware.
+# Modify to match CPU of specific machine!
 PERF_METRICS = {
     "task-clock": PerfMetric("task-clock", factor=1e-9, unit="s"),
     "wall-clock": PerfMetric("duration_time", factor=1e-9, unit="s"),
@@ -47,7 +62,7 @@ ALL_METRICS = {**PERF_METRICS, **RUSAGE_METRICS}
 
 def measure_perf(cmd: list[str], events: list[str]) -> dict[str, tuple[float, str]]:
     with tempfile.NamedTemporaryFile() as tmp:
-        # Pin to power cores on l17
+        # Pin to performance cores. Modify to match CPU of specific machine!
         cmd = [
             *["taskset", "-c", "0-15", "perf", "stat", "-j", "-o", tmp.name],
             *[arg for event in events for arg in ["-e", event]],
